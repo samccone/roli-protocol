@@ -1,0 +1,6 @@
+A work in progress port of the Blocks Protocol
+
+Reference material
+
+https://github.com/WeAreROLI/JUCE/blob/eb0293a285b2725ca4e90137d26d0ab616df6f9e/modules/juce_blocks_basics/protocol/juce_BlocksProtocolDefinitions.h#L385
+https://juce.com/doc/namespaceBlocksProtocol#a25b483d5847443ad588bef58db3390f7

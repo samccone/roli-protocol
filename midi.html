@@ -1,0 +1,100 @@
+<html>
+
+<body>
+</body>
+<script src="require.js"></script>
+<script src="main.js"></script>
+<script>
+    requirejs(["main"], function (main) {
+        main.run();
+    });
+</script>
+
+<code>
+    const messageFooter = 0x7f;
+
+    // https://github.com/WeAreROLI/JUCE/blob/f08aa821b6be6a71f774bf7a163258ac0bbe0a22/modules/juce_blocks_basics/protocol/juce_BitPackingUtilities.h
+    /**
+    All sysex messages to or from a BLOCKS device begin with these header bytes.
+    The next byte that follows indicates the device index within the topology, where
+    the 0x40 bit is set for device->host messages, and clear for host->device messages.
+    The lower 6 bits contain the topology index of the destination or source device.
+    */
+    const ROLI_SYSEX_HEADER = [0xf0, 0x00, 0x21, 0x10, 0x77];
+    const DEVICE_TO_HOST_MSG = 0x40;
+
+    function calculatePacketChecksum(data, size) {
+        let checksum = size;
+
+        for (i = 0; i < size; ++i) {
+            checksum += checksum * 2 + data[i];
+        }
+
+        return checksum & 0x7f;
+    }
+
+    function hasSysexHeader(bytes) {
+        for (let i = 0; i < ROLI_SYSEX_HEADER.length; i++) {
+            if (bytes[i] !== ROLI_SYSEX_HEADER[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function onMIDIMessage(d) {
+        if (hasSysexHeader(d)) {
+            handleRoliMessage(d)
+
+        } else {
+            console.warn('unknown message received')
+            for (var i = 0; i < event.data.length; i++) {
+                str += "0x" + event.data[i].toString(16) + " ";
+            }
+        }
+        /*
+        for (var i = 0; i < event.data.length; i++) {
+            str += "0x" + event.data[i].toString(16) + " ";
+        }
+        */
+
+        i
+        console.log(str);
+    }
+
+    function onMIDIFailure(err) {
+        console.error(err);
+    }
+
+    async function onMIDISuccess(access) {
+
+        access.inputs.forEach(async (input) => {
+            input.addEventListener('midimessage', onMIDIMessage);
+            await input.open();
+        });
+
+        for (const out of access.outputs.values()) {
+            await out.open();
+            const _DEVICE_INDEX = 0;
+            const toSend = ROLI_SYSEX_HEADER.slice(0);
+            toSend.push(_DEVICE_INDEX & 0x7f)
+            // beginAPIMode
+            toSend.push(0x00);
+            toSend.push(calculatePacketChecksum(toSend, toSend.length));
+            toSend.push(0xf7);
+
+            out.send(new Uint8Array([240, 0, 33, 16, 119, 0, 1, 1, 0, 93, 247]));
+            //out.send(new Uint8Array([240, 0, 33, 16, 119, 27, 1, 2, 0, 96, 247]));
+
+            setInterval(() => {
+                // heart beat
+                out.send(new Uint8Array([240, 0, 33, 16, 119, 0, 1, 1, 0, 93, 247]));
+            }, 1000);
+        }
+    }
+    navigator.requestMIDIAccess({
+        sysex: true
+    }).then(onMIDISuccess, onMIDIFailure);
+</code>
+
+</html>
