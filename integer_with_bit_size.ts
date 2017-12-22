@@ -9,7 +9,7 @@ export class IntegerWithBitSize {
   }
 
   constructor(private _bits: number, value = 0) {
-    if (_bits >= 32) {
+    if (_bits > 32) {
       throw new Error("bits must be <= 32");
     }
 
